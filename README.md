@@ -31,3 +31,29 @@ Here we showcase some representative generated videos demonstrating the capabili
 
 
 ### 3. 
+
+![If the animation does not display correctly, please refer to ./examples/bg2.gif.](./examples/character_resized.gif)
+
+
+
+### 3. 
+
+![If the animation does not display correctly, please refer to ./examples/bg2.gif.](./examples/Tai_Chi_seed_0-199.gif)
+
+
+
+### 3. 
+
+![If the animation does not display correctly, please refer to ./examples/bg2.gif.](./examples/skiing_seed_0-199.gif)
+
+
+
+
+### 3. 
+
+![If the animation does not display correctly, please refer to ./examples/bg2.gif.](./examples/Yoga_seed_0-199.gif)
+
+
+### 3. 
+
+![If the animation does not display correctly, please refer to ./examples/bg2.gif.](./examples/situp_seed_0-199.gif)
