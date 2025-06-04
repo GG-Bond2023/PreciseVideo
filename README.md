@@ -7,10 +7,27 @@ PreciseVideo is a **zero-shot text-to-video generation framework** that enables 
 - 🌌 **Region-Wise Temporal Control**: Introduces a *latent space noise modulator* and *sparse-fusion attention* to control how much different areas in the scene change over time.
 - 🧍 **Consistent and Complete Characters**: Proposes *optimal-reference-frame attention* to maintain **identity, appearance, and limb completeness** across frames.
 - 🎮 **ControlNet Integration**: Achieves **99.51% accuracy** in aligning generated characters with specified poses or counts.
-- 📊 **Quantitative Temporal Control**: The temporal variation intensity (δ) shows strong correlation with frame-wise metrics:
+- 📊 **Quantitative Temporal Control**: The  shows strong correlation with frame-wise metrics:
   - MSE: **0.93**
   - SSIM: **–0.96**
 - 👥 **Handles Complex Scenes**: Capable of handling:
   - Multiple interacting characters
   - Scene-to-character and person-to-person occlusions
   - Crowded environments
+
+
+## 🎬 Experimental Results
+Here we showcase some representative generated videos demonstrating the capabilities of **PreciseVideo**.
+
+### 1. We are able to control the temporal variation intensity of video backgrounds. The following results demonstrate the effect of varying the temporal variation intensity (δ) from left to right, with values ranging from 0 to 1 in increments of 0.1.
+
+
+![If the animation does not display correctly, please refer to ./examples/bg1.gif.](./examples/bg1.gif)
+
+### 2. Our control capability is independent across regions. In the following example, the temporal variation intensity of the "sky" region gradually decreases, while that of the "waves" region gradually increases.
+
+
+![If the animation does not display correctly, please refer to ./examples/bg2.gif.](./examples/bg2.gif)
+
+
+### 3. 
