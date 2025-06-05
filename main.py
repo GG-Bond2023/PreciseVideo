@@ -43,7 +43,7 @@ def main(
     config_file: str = ''
 ):
     device = "cuda"
-    # -------------- 加载预训练模型 ---------------- #
+
     controlnet = ControlNetModel.from_pretrained(
         pretrained_ControlNet_Model_path,
         torch_dtype=torch.float16
