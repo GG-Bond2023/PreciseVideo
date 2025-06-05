@@ -5,19 +5,12 @@ pretrained_inpaint_Model_path: "/media/dlz/Data/model_download/runwayml_stable-d
 save_path: '/media/dlz/Data/workspace/my_work/VideoSD_v1_2/input/github_test/output'
 
 prompt_bg:
-#  - "beach, lane,blue_sea, golden_sand, green_forest,"
-#  - "the_lawn, blue_sky_and_white_clouds"
-#  - "the wave"
-#  - "A simple ballet stage"
-#  - "Green meadow with a lone distant tree, under a gray cloudy sky. Overcast and calm atmosphere."
   - "Waves and white clouds"
 prompt_obj:
-#  - "Three dancers in Michael Jackson-inspired outfits performing the iconic crotch grab move, frontal view, highly dynamic, full body, stage spotlight, realistic lighting, high detail, dramatic shadows, energetic performance"
   - "Iron Man"
 
 
 negative_prompt_bg:
-#  - "longbody, Texts,lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer difits, cropped, worst quality, low quality, deformed body, bloated, ugly, unrealistic"
   - "Nobody."
 negative_prompt_obj:
   - "longbody, Texts,lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer difits, cropped, worst quality, low quality, deformed body, bloated, ugly, unrealistic"
@@ -26,15 +19,8 @@ seed_bg: 198
 seed_obj: 111
 
 
-
-
-# 正面走"
 pose_image_path: "/media/dlz/Data/workspace/my_work/VideoSD_v1_2/input/github_test/4"
-# 侧面走"
-#pose_image_path: "/media/dlz/Data/workspace/my_work/VideoSD_v1_1/pose_image_org/walkman_org1/pose/3"
 
-## feixing"
-#pose_image_path: "/media/dlz/Data/workspace/my_work/VideoSD_v1_1/pose_image_org/fly"
 
 
 crop_size: 176
