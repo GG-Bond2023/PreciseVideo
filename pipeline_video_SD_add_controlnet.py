@@ -80,8 +80,8 @@ def tensor_roll(x, offset_h=None, offset_w=None, padding=0):
 
 
 def motion_fun(image,x_scale, y_scale, height=512, width=512):
-    dx = x_scale*width  # 水平平移量
-    dy = y_scale*height  # 垂直平移量
+    dx = x_scale*width  # 
+    dy = y_scale*height  # 
     M = np.array([[1, 0, dx],
                   [0, 1, dy]], dtype=np.float32)
     translated_image = image.transform(image.size, Image.AFFINE, M.flatten()[:6], resample=Image.BICUBIC)
@@ -123,25 +123,6 @@ def set_object_mask(mask_h,mask_w,height=512, width=512):
 #     arr[(height-mask_h)/2:(height+mask_h)/2,(width-mask_w)/2:(width+mask_w)/2] = 1
     arr[a:b,c:d] = 1
     return tensor(arr)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1368,51 +1349,19 @@ class controlnet_inpaint_video_pipeline(
 
         if bg_theta is not None:
             for i, value in enumerate(bg_theta):
-
-                # 使用最大池化操作，每个 8x8 的区域取最大值
                 bbbb = F.max_pool2d(mask_image[i, :, :].unsqueeze(0), kernel_size=8, stride=8)
-                # bbbb = bbbb.squeeze(0).numpy()
-                # 使用 Matplotlib 显示
-                # plt.imshow(bbbb, cmap='gray')  # 灰度图像
-                # plt.axis('off')  # 隐藏坐标轴
-                # plt.show()
                 mask_image_temp = F.max_pool2d(mask_image.sum(dim=0).unsqueeze(0), kernel_size=8, stride=8)
-
-
-
 
                 if latents is None:
                     latents = x_base * (1-mask_image_temp).to(device=self._execution_device,dtype=x_base.dtype)
-
-                    a = latents[0, 0, :, :].cpu().numpy()
-                    plt.imshow(a, cmap='gray')  # 灰度图像
-                    plt.axis('off')  # 隐藏坐标轴
-                    plt.show()
-                    a = 1
-
-
                     latents += (np.cos(value * np.pi / 2) * x_base + np.sin(value * np.pi / 2) * x_res) * bbbb.to(device=self._execution_device,dtype=x_base.dtype)
                 else:
                     latents += (np.cos(value * np.pi / 2) * x_base + np.sin(value * np.pi / 2) * x_res) * bbbb.to(device=self._execution_device,dtype=x_base.dtype)
-
-                a = latents[0,0,:,:].cpu().numpy()
-                plt.imshow(a, cmap='gray')  # 灰度图像
-                plt.axis('off')  # 隐藏坐标轴
-                plt.show()
-                a= 1
         else:
             latents = x_base
 
         # 7. Prepare mask latent variables
         mask_condition = self.mask_processor.preprocess(mask_image.sum(dim=0), height=height, width=width)
-
-
-
-
-
-
-
-
 
         if masked_image_latents is None:
             masked_image = init_image * (mask_condition < 0.5)
@@ -1630,7 +1579,7 @@ class controlnet_inpaint_video_pipeline(
 
         import re
         top_folder_name = prompt_obj[0][:20] + '___' + prompt_bg[0][:20]
-        top_folder_name = re.sub(r'[^\w\-]', '_', top_folder_name)  # 非字母数字或下划线/横杠替换成 _
+        top_folder_name = re.sub(r'[^\w\-]', '_', top_folder_name)  
 
         exp_path = os.path.join(save_path, top_folder_name)
         now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
@@ -1639,21 +1588,15 @@ class controlnet_inpaint_video_pipeline(
         if not os.path.exists(full_path):
             os.makedirs(full_path)
             os.makedirs(source_path)
-            print(f"文件夹 '{full_path}' 创建成功！")
-            print(f"文件夹 '{source_path}' 创建成功")
 
         log_file = f"{full_path}/log.txt"
 
-        # 复制文件到目标文件夹
-        # 这里使用 os.path.basename 获取源文件的文件名
         shutil.copy(config_file, os.path.join(source_path, os.path.basename(config_file)))
 
 
 
         image_BG_temp = None
-        # ****************************************** 原始背景 *****************************************
-        # ********** 提供全部背景帧 ************
-        # -- 当提供所有背景帧时，直接进入前景对象生成流程 -- #
+
         if isinstance(image,list):
             mode = 'list'
             # for i in range(frame_num):
@@ -1666,7 +1609,6 @@ class controlnet_inpaint_video_pipeline(
             image_BG_temp = image
             BG_image_1 = image[0]
 
-        # ********** 不提供背景帧 ************
         elif image is None:
             mode = 'no'
             mask_BG_full = set_background_mask(direction="right up", x_scale=512, y_scale=512, height=512,
@@ -1690,13 +1632,12 @@ class controlnet_inpaint_video_pipeline(
             BG_image_1 = self.image_processor.postprocess(BG_1, output_type="pil", do_denormalize=[True])[0]
             plt.imshow(BG_image_1)
             pylab.show()
-        # ------------ 提供第一张原始背景 ---------#
+
         elif isinstance(image,PIL.Image.Image):
             BG_image_1 = image
             plt.imshow(BG_image_1)
             pylab.show()
 
-        # ---------------------------------------------- 保存第一张原始背景 ------------------------ #
         step = 0
         group = 0
         BG_image_1.save(f'{full_path}/{step}_{group}_org_bg.png', format='PNG')
@@ -1705,10 +1646,8 @@ class controlnet_inpaint_video_pipeline(
         torch.cuda.empty_cache()
 
         if isinstance(image,list):
-            print('多背景模式，无须背景编辑')
+            print('Multi-background mode, no background editing required')
         else:
-            # ****************************************** 背景动态编辑 ***************************************** #
-            # ****************************************电影编辑功能不需要此步骤
             maskingapp = Maskingapp(background_image_path=None,image=BG_image_1)
             weight_tensor,mask_data, masked_image, bg_masks, Noise_weight ,colors= maskingapp.run()
 
@@ -1725,7 +1664,6 @@ class controlnet_inpaint_video_pipeline(
             plt.imshow(masked_image)
             pylab.show()
 
-            # ------------------------------ 保存文件 ------------------- #
             step = step + 1
             group = 0
             Image.fromarray(mask_data).save(f'{full_path}/{step}_{group}_masked_data.png')
@@ -1737,7 +1675,7 @@ class controlnet_inpaint_video_pipeline(
                 mask_BG = torch.cat([torch.unsqueeze(bg_masks[i], dim=0)]*frame_num,dim=0)
                 mask_BG = mask_BG.to(device=self._execution_device)
 
-                plt.imshow(bg_masks[i], cmap='gray')  # 使用灰度色图显示
+                plt.imshow(bg_masks[i], cmap='gray')  # 
                 plt.show()
 
             bg_masks = bg_masks.to(device=self._execution_device)
@@ -1757,7 +1695,6 @@ class controlnet_inpaint_video_pipeline(
             )
             image_BG_temp = self.image_processor.postprocess(image_BG_temp, output_type="pil", do_denormalize=[True]*frame_num)
 
-            # ------------------------------ 保存文件 ------------------- #
             group = group + 1
             for k in range(frame_num):
                 image_BG_temp[k].save(f'{full_path}/{step}_{group}_BGtemp_{k}.png', format='PNG')
@@ -1765,7 +1702,6 @@ class controlnet_inpaint_video_pipeline(
                 pylab.show()
 
             group = group + 1
-            # ----------------------------- 按区域保存 ----------------------#
             for i, bg in enumerate(image_BG_temp):
                 plt.imshow(bg)
                 pylab.show()
@@ -1773,21 +1709,16 @@ class controlnet_inpaint_video_pipeline(
                 mask = mask_BG[i, :, :]
 
                 bg_temp = tensor(bg_temp)
-                # 应用掩膜
                 bg_temp[3, :, :] = mask
                 bg_temp = bg_temp * 255
-                bg_temp_uint8 = bg_temp.byte()  # 转换为 uint8 类型
+                bg_temp_uint8 = bg_temp.byte()  
 
-                # 转换为 numpy 数组并调整维度
-                # 需要将通道数放在最后一维
-                bg_image = bg_temp_uint8.permute(1, 2, 0).numpy()  # 变为 (512, 512, 4)
-                # 创建 RGBA 图片
+                bg_image = bg_temp_uint8.permute(1, 2, 0).numpy()  
+
                 bg_rgba = Image.fromarray(bg_image, mode='RGBA')
 
-                # 创建一个新的 RGB 图像，背景为白色
                 rgb_image = Image.new("RGB", bg_rgba.size, (255, 255, 255))
 
-                # 将 ARGB 图像粘贴到新的 RGB 图像上，透明区域将显示为白色
                 rgb_image.paste(bg_rgba, (0, 0), bg_rgba)
 
                 plt.imshow(bg_rgba)
@@ -1800,12 +1731,6 @@ class controlnet_inpaint_video_pipeline(
 
 
 
-
-
-
-
-
-        # ****************************************** 前景对象 batch_size = f *****************************************
         generator = torch.Generator(device=device)
         generator.manual_seed(seed_obj)
 
@@ -1835,14 +1760,13 @@ class controlnet_inpaint_video_pipeline(
         cropped_bg = []
         width, height = (crop_size, crop_size)
         for img, (x, y) ,width in zip(image_BG_temp, curve_point,final_sizes):
-            # 计算截取区域
+
             food_offset = int(60*(width/512))
             box = (x-width//2, y-width+food_offset, x + width//2, y+food_offset)
-            # 截取图片
+
             cropped_img = img.crop(box)
             cropped_bg.append(cropped_img.resize((512,512)))
 
-        # ------------------------------ 保存文件 ------------------- #
         step = step + 1
         group = 0
         for k in range(frame_num):
@@ -1861,9 +1785,8 @@ class controlnet_inpaint_video_pipeline(
             pose_image_paths = read_jpg_images_path(folder_path=image_pose_paths, img_type='.png')
 
 
-            # 膨胀卷积核
             kernel = np.ones((5, 5), np.uint8)
-            # 读取每张pose图片并膨胀获得mask
+
             pose_masks = None
             pose_masks_mini = None
             pose_images = None
@@ -1871,13 +1794,11 @@ class controlnet_inpaint_video_pipeline(
                 pose_image = Image.open(pose_image_path)
                 pose_image_tensor = torch.unsqueeze(tensor(pose_image), dim=0)
 
-                # 膨胀处理，获得mask
                 dilated_image = cv2.dilate(np.array(pose_image), kernel, iterations=10)
                 pose_mask = dilated_image[:, :, 0] + dilated_image[:, :, 1] + dilated_image[:, :, 2]
                 pose_mask[pose_mask > 0] = 255
                 pose_mask_tensor = torch.unsqueeze(tensor(pose_mask), dim=0)
 
-                # 膨胀处理，获得mask_mini
                 dilated_image_mini = cv2.dilate(np.array(pose_image), kernel, iterations=7)
                 pose_mask_mini = dilated_image_mini[:, :, 0] + dilated_image_mini[:, :, 1] + dilated_image_mini[:, :, 2]
                 pose_mask_mini[pose_mask_mini > 0] = 255
@@ -1904,17 +1825,10 @@ class controlnet_inpaint_video_pipeline(
 
 
 
-
-
-
         numpy_data = np.random.rand(BG_saved.shape[0],3, 512, 512)
         noise_image = torch.tensor(numpy_data)
         noise_image = self.image_processor.preprocess(noise_image, height=512, width=512)
         noise_image = noise_image.to(device=self._execution_device)
-
-
-
-
 
 
         prompt_obj = prompt_obj * BG_saved.shape[0]
@@ -1932,33 +1846,6 @@ class controlnet_inpaint_video_pipeline(
 
         org_img_obj = self.image_processor.postprocess(image_OUT, output_type="pil", do_denormalize=[True]*BG_saved.shape[0])
 
-        # for i, (obj, (x, y),width) in enumerate(zip(org_img_obj, curve_point,final_sizes)):
-        #     plt.imshow(obj)
-        #     pylab.show()
-        #     obj_temp = obj.convert("RGBA")
-        #     mask = pose_masks_mini[i,0,:,:]
-        #
-        #     obj_temp = tensor(obj_temp)
-        #     # 应用掩膜
-        #     obj_temp[3, :, :] = mask
-        #     obj_temp = obj_temp * 255
-        #     obj_temp_uint8 = obj_temp.byte()  # 转换为 uint8 类型
-        #
-        #     # 转换为 numpy 数组并调整维度
-        #     # 需要将通道数放在最后一维
-        #     obj_image = obj_temp_uint8.permute(1, 2, 0).numpy()  # 变为 (512, 512, 4)
-        #     # 创建 RGBA 图片
-        #     obj_rgba = Image.fromarray(obj_image, mode='RGBA')
-        #
-        #     obj_rgba = obj_rgba.resize((width,width))
-        #     plt.imshow(obj_rgba)
-        #     pylab.show()
-        #     food_offset = int(60 * (width / 512))
-        #     # 将掩膜结果粘贴到目标图片上
-        #     image_BG_temp[i].paste(obj_rgba, (x-width//2, y-width+food_offset), obj_rgba)  # 使用掩膜进行粘贴
-        #     # image_BG_temp[i].paste(obj_temp, (x-width//2, y-width), obj_temp)  # 使用掩膜进行粘贴
-        #     plt.imshow(image_BG_temp[i])
-        #     pylab.show()
 
 
 
@@ -1969,34 +1856,26 @@ class controlnet_inpaint_video_pipeline(
             obj_temp = obj.convert("RGBA")
             image_BG_temp[i] = image_BG_temp[i].convert("RGBA")
 
-            # 指定缩放后的大小
-            new_size = (width, width)  # 替换为你想要的大小
+            new_size = (width, width)  
 
-            # 缩放图像
             resized_image = obj_temp.resize(new_size, Image.ANTIALIAS)
 
-            # 计算粘贴位置
             background_width, background_height = image_BG_temp[i].size
             food_offset = int(60 * (width / 512))
             paste_position = (x-width//2, y-width+food_offset)
 
-            # 创建一个渐变蒙版
-            mask_paste = Image.new("L", (new_size[0], new_size[1]), 0)  # 创建一个黑色蒙版
+            mask_paste = Image.new("L", (new_size[0], new_size[1]), 0)  
             for k in range(new_size[0]):
                 for j in range(new_size[1]):
-                    # 计算距离中心的距离
                     distance = min(k, j, new_size[0] - k, new_size[1] - j)
-                    # 根据距离设置透明度，距离越近，透明度越低（越透明）
-                    mask_paste.putpixel((k, j), int(255 * (distance / 20)))  # 调整20以控制渐变范围
+                    mask_paste.putpixel((k, j), int(255 * (distance / 20))) 
 
-            # 将缩放后的图像粘贴到背景图像上
             image_BG_temp[i].paste(resized_image, paste_position, mask_paste)
 
             plt.imshow(image_BG_temp[i])
             pylab.show()
 
 
-        # -------------------- 保存文件 -------------------#
         group = group + 1
         for i in range(frame_num):
             org_img_obj[i].save(f'{full_path}/{step}_{group}_cropped_BG_obj_{i}.png', format='PNG')
@@ -2015,38 +1894,7 @@ class controlnet_inpaint_video_pipeline(
         torch.cuda.empty_cache()
 
 
-        # # ****************************************** 前景对象 batch_size = 1 *****************************************
-        # mask_OBJ = set_object_mask(mask_h=400, mask_w=400)
-        # mask_OBJ = mask_OBJ.to(device=self._execution_device)
-        #
-        # result_obj_NoCrossAtte = None
-        # for i in range(BG_saved.shape[0]):
-        #     image_BG = self.inference(
-        #         prompt=prompt_obj[0],
-        #         image=BG_saved[i],
-        #         mask_image=mask_OBJ,
-        #         generator=generator,
-        #         output_type="tensor"
-        #     )
-        #     if result_obj_NoCrossAtte is None:
-        #         result_obj_NoCrossAtte = image_BG
-        #     else:
-        #         result_obj_NoCrossAtte = torch.cat([result_obj_NoCrossAtte, image_BG])
-        #
-        # #     image_show = self.image_processor.postprocess(image_BG, output_type="pil", do_denormalize=[True])
-        # #
-        # #     plt.subplot(2, BG_saved.shape[0], i + BG_saved.shape[0]+1)
-        # #     plt.imshow(image_show[0])
-        # #     plt.axis('off')
-        # # plt.suptitle('seed = ' + str(seed) + ';  ' + 'prompt_bg = ' + prompt_bg[0] + ';  ' + 'prompt_obj = ' + prompt_obj[0],fontsize=40)
-        # # pylab.show()
-        # tensor_obj_NoCrossAtte = result_obj_NoCrossAtte
-        # pil_obj_NoCrossAtte = self.image_processor.postprocess(result_obj_NoCrossAtte, output_type="pil", do_denormalize=[True]*BG_saved.shape[0])
-        #
-        # torch.cuda.empty_cache()
-
-
-        return 1
+        return None
 
 
 
