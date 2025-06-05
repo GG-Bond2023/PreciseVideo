@@ -58,18 +58,9 @@ def main(
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     pipe = pipe.to(device)
 
-
-    pose_sequence = load_pose_sequence_from_folder(pose_image_path)
-    alpha = compute_optimal_reference_frame(pose_sequence)
-
-
-    # ----------- 设置帧间注意力机制 ---------------#
-    # pipe.unet.set_attn_processor(
-    #     processor=utils.CrossFrameAttnProcessor(unet_chunk_size=2,alpha=alpha))
-
     if org_bg_image_path == '':
         bg_image = None
-        print("无背景生成模式")
+        print("Background-free generation mode")
     elif os.path.isdir(org_bg_image_path):
         bg_image = []
         for filename in os.listdir(org_bg_image_path):
@@ -79,12 +70,12 @@ def main(
                 bg_image.append(img)
                 # plt.imshow(img)
                 # pylab.show()
-        print('多背景生成模式')
+        print('Multi-background generation mode')
     elif os.path.isfile(org_bg_image_path):
         bg_image = PIL.Image.open(org_bg_image_path).convert('RGB').resize((512, 512))
-        print('单背景生成模式')
+        print('Single-background generation mode')
     else:
-        print(f"{org_bg_image_path} 不是一个有效的路径")
+        print(f"{org_bg_image_path} Invalid path")
 
     prompt_obj = list(prompt_obj)
     prompt_bg = list(prompt_bg)
@@ -122,7 +113,6 @@ if __name__ == "__main__":
     conf['config_file'] = parser.get_default('config')
     main(**conf)
 
-    print('文件以保存在')
 
 
 
