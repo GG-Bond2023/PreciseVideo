@@ -26,7 +26,7 @@ class CrossFrameAttnProcessor:
             encoder_hidden_states = attn.norm_cross(encoder_hidden_states)
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
-        # Sparse Attention
+        
         if not is_cross_attention:
             video_length = key.size()[0] // self.unet_chunk_size
 
@@ -41,42 +41,35 @@ class CrossFrameAttnProcessor:
                 value = value[:, former_frame_index]
                 value = rearrange(value, "b f d c -> (b f) d c")
             elif self.alpha is None:
+                # Sparse Attention
                 key = rearrange(key, "(b f) d c -> b f d c", f=video_length)
 
                 temp_batchsize, frame_num, figure_num, figure_w = key.shape
 
                 for i in range(1, frame_num):
-                    # 从前 i 帧中取所有 token，形状：[batch_size, i * figure_num, figure_w]
                     prev_tokens = key[:, :i, :, :].reshape(temp_batchsize, -1, figure_w)
-
-                    # 均匀抽取 figure_num 个 token 索引
                     total_prev = prev_tokens.shape[1]
                     indices = torch.linspace(0, total_prev - 1, steps=figure_num).long()
 
-                    # 抽样（注意 batch 维度要 broadcast）
-                    sampled = prev_tokens[:, indices, :]  # [batch_size, figure_num, figure_w]
 
-                    # 替换第 i 帧
+                    sampled = prev_tokens[:, indices, :]  # [batch_size, figure_num, figure_w]
                     key[:, i, :, :] = sampled
                 key = rearrange(key, "b f d c -> (b f) d c")
 
                 value = rearrange(value, "(b f) d c -> b f d c", f=video_length)
                 temp_batchsize, frame_num, figure_num, figure_w = value.shape
                 for i in range(1, frame_num):
-                    # 从前 i 帧中取所有 token，形状：[batch_size, i * figure_num, figure_w]
                     prev_tokens = value[:, :i, :, :].reshape(temp_batchsize, -1, figure_w)
 
-                    # 均匀抽取 figure_num 个 token 索引
                     total_prev = prev_tokens.shape[1]
                     indices = torch.linspace(0, total_prev - 1, steps=figure_num).long()
 
-                    # 抽样（注意 batch 维度要 broadcast）
                     sampled = prev_tokens[:, indices, :]  # [batch_size, figure_num, figure_w]
 
-                    # 替换第 i 帧
                     value[:, i, :, :] = sampled
                 value = rearrange(value, "b f d c -> (b f) d c")
             else:
+                # ORF Attention
                 former_frame_index = [self.alpha]*video_length
                 # former_frame_index = [0,1,2,3,4,5,6,7]
                 key = rearrange(key, "(b f) d c -> b f d c", f=video_length)
