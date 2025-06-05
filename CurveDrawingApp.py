@@ -81,7 +81,6 @@ class CurveDrawingApp:
         return self.re_point
 
 
-# 使用示例
 if __name__ == "__main__":
     image_path = "/media/dlz/Data/workspace/my_work/VideoSD_v1_1/output/Astronaut___Forests, lane,tall_trees, thick_leaves, light_and_shadow, small_animals/2024-08-23T09-10-27/0_0_org_bg.png"  
     app = CurveDrawingApp(image_path=image_path,repoint_num=8)
